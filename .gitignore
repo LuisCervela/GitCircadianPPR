@@ -1,0 +1,10 @@
+# Raw massive data
+data_raw/*
+
+# RStudio / R crap
+.Rproj.user/
+.Rhistory
+.RData
+
+# Optional: if you have very big intermediate stuff later
+# data_clean/*
