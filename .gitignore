@@ -1,7 +1,35 @@
-# Raw massive data
-data_raw/*
-data_clean/*
-# RStudio / R crap
-.Rproj.user/
+# ---- R / RStudio ----
 .Rhistory
 .RData
+.Ruserdata
+.Rproj.user/
+*.Rproj.user
+
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
+
+# ---- Big raw inputs (do not commit) ----
+data_raw/MBQN_20250715.csv
+
+# RSAT promoter FASTA exports (regenerate; do not commit by default)
+data_raw/rsat/
+
+# ---- Derived data (regenerate) ----
+data_clean/MBQN_*.csv
+data_clean/MBQN_*_expr_only.csv
+data_clean/MBQN_trimmed_selected_GEARS.csv
+data_clean/sample_annotation.csv
+
+# ---- Intermediate MetaCycle outputs (always ignore) ----
+tables/metacycle_tmp/
+
+# ---- Large result tables (optional: keep or ignore) ----
+# If you want a "results-in-repo" approach, comment these out.
+tables/method_results_long.csv
+tables/support_by_gene_condition_gear.csv
+tables/consensus_by_gene_condition.csv
+tables/eligibility_by_condition_gear.csv
+
+# ---- Figures (optional: keep or ignore) ----
+figures/

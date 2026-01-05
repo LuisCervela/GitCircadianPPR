@@ -2,6 +2,18 @@ library(data.table)
 
 ## ---------- 1. Read raw MBQN file ----------
 
+raw_file <- "data_raw/MBQN_20250715.csv"
+if (!file.exists(raw_file)) {
+  stop(
+    "Missing: ", raw_file, "\n",
+    "Download MBQN from GEAR (https://scientist.xsrv.jp/wp-content/uploads/2025/07/MBQN_20250715.csv) ",
+    "or from Zenodo (DOI: 10.5281/zenodo.15910335), ",
+    "then place it in data_raw/ with the exact filename."
+  )
+}
+
+
+
 mbqn <- fread(
   "data_raw/MBQN_20250715.csv",
   header      = TRUE,
