@@ -501,8 +501,8 @@ plot_gene_by_condition <- function(gene_id,
 ## ----------------------------
 
 if (interactive()) {
-  gene_id   <- "AT3G57430"   # example gene
-  condition <- "16L8D"
+  gene_id   <- "AT5G24470"   # example gene
+  condition <- "12L12D"      # example condition
   
   # Raw plots (overlay + facets)
   res <- plot_gene_by_condition(gene_id, condition, mode = "raw")
@@ -514,3 +514,5 @@ if (interactive()) {
                                  min_range = 0.1, require_shared_times = FALSE)
   print(resn$plot_norm_overlay)
 }
+
+
