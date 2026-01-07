@@ -5,6 +5,8 @@ library(dplyr)
 library(readr)
 library(tidyr)
 library(writexl)
+library(ggplot2)
+library(scales)
 
 ## ----------------------------
 ## 1) Phase binning (4h windows)
@@ -163,3 +165,101 @@ write_xlsx(tables_by_condition, path = "tables/TRUE_PPR_phasebin4h_loc4_by_condi
 
 
 tables_by_condition[["12L12D_LL"]] # view example
+
+
+## ============================================================
+## 6) Bar plots for SUBA-by-phase tables
+## ============================================================
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(scales)
+  library(dplyr)
+  library(tidyr)
+})
+
+dir.create("figures", showWarnings = FALSE, recursive = TRUE)
+
+# Fixed palette (as requested)
+loc_palette <- c(
+  mito   = "red",
+  chloro = "green",
+  dual   = "purple",
+  other  = "gray70"
+)
+
+# Helper to plot one condition table
+plot_phase_location_bars <- function(df_wide, cond_name,
+                                     mode = c("counts", "fraction"),
+                                     outfile = NULL,
+                                     x_angle = 55) {
+  mode <- match.arg(mode)
+  
+  needed <- c("phase_bin4h", "chloro", "mito", "dual", "other")
+  missing <- setdiff(needed, names(df_wide))
+  if (length(missing) > 0) {
+    stop("Missing columns in df_wide: ", paste(missing, collapse = ", "))
+  }
+  
+  df_long <- df_wide %>%
+    mutate(phase_bin4h = factor(phase_bin4h, levels = bin_levels)) %>%
+    pivot_longer(cols = c(chloro, mito, dual, other),
+                 names_to = "loc4", values_to = "n_genes") %>%
+    mutate(
+      loc4 = factor(loc4, levels = c("chloro","mito","dual","other")),
+      phase_bin4h = factor(phase_bin4h, levels = bin_levels)
+    )
+  
+  if (mode == "fraction") {
+    df_long <- df_long %>%
+      group_by(phase_bin4h) %>%
+      mutate(frac = ifelse(sum(n_genes) > 0, n_genes / sum(n_genes), 0)) %>%
+      ungroup()
+    
+    p <- ggplot(df_long, aes(x = phase_bin4h, y = frac, fill = loc4)) +
+      geom_col(width = 0.85) +
+      scale_fill_manual(values = loc_palette) +
+      scale_y_continuous(labels = percent_format(accuracy = 1)) +
+      labs(
+        title = paste0("Rhythmic PPRs by phase bin and localization (", cond_name, ")"),
+        x = NULL, y = "Fraction of rhythmic PPRs",
+        fill = "Localization"
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        axis.text.x = element_text(angle = x_angle, hjust = 1, vjust = 1),
+        legend.position = "right"
+      )
+    
+  } else {
+    p <- ggplot(df_long, aes(x = phase_bin4h, y = n_genes, fill = loc4)) +
+      geom_col(width = 0.85) +
+      scale_fill_manual(values = loc_palette) +
+      labs(
+        title = paste0("Rhythmic PPRs by phase bin and localization (", cond_name, ")"),
+        x = NULL, y = "Number of genes",
+        fill = "Localization"
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        axis.text.x = element_text(angle = x_angle, hjust = 1, vjust = 1),
+        legend.position = "right"
+      )
+  }
+  
+  if (!is.null(outfile)) {
+    ggsave(outfile, plot = p, width = 8.5, height = 4.8, dpi = 300)
+  }
+  return(p)
+}
+
+
+
+ for (cn in names(tables_by_condition)) {
+ plot_phase_location_bars(
+    df_wide = tables_by_condition[[cn]],
+     cond_name = cn,
+#    mode = "counts",
+     outfile = file.path("figures", paste0("phasebin4h_SUBA_loc4_", cn, "_counts.png")),
+     x_angle = 60
+   )
+ }
