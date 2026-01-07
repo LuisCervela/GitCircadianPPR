@@ -1,0 +1,7 @@
+phase_bin4h,chloro,dual,mito,other
+Dawn/early day (ZT0–3),2,0,1,1
+Morning (ZT4–7),2,0,0,0
+Late day (ZT8–11),2,0,0,0
+Early night (ZT12–15),3,0,0,0
+Mid night (ZT16–19),3,0,0,0
+Late night/pre-dawn (ZT20–23),2,0,1,1

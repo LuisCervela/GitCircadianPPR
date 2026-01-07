@@ -108,3 +108,56 @@ print(p_up)
 # Optional: save
 dir.create("figures", showWarnings = FALSE, recursive = TRUE)
 ggsave("figures/upset_SUBA_bins.png", p_up, width = 8, height = 5, dpi = 300)
+
+cat("Wrote: figures/upset_SUBA_bins.png\n")
+
+# ---------------------------
+# bins used in the upset
+bins_to_use <- c("mitochondrion", "chloroplast", "nucleus", "cytosol", "other")
+
+# 1) Long format: one row per AGI × bin (for Excel filtering)
+suba_long_bins <- suba_bin %>%
+  select(AGI, all_of(bins_to_use)) %>%
+  pivot_longer(cols = all_of(bins_to_use), names_to = "bin", values_to = "present") %>%
+  filter(present) %>%
+  arrange(bin, AGI)
+
+# Optional: collapse into one cell per bin with AGIs separated by semicolons
+suba_bin_lists <- suba_long_bins %>%
+  group_by(bin) %>%
+  summarise(
+    n_genes = n(),
+    AGI_list = paste(AGI, collapse = "; "),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(n_genes))
+
+# 2) Wide format: one row per gene with TRUE/FALSE membership columns
+suba_membership_wide <- suba_bin %>%
+  select(AGI, all_of(bins_to_use)) %>%
+  arrange(AGI)
+
+# 3) Also export intersections (optional, but useful)
+#    This labels each gene as e.g. "mitochondrion", "chloroplast", "mitochondrion+chloroplast", etc.
+suba_intersection_label <- suba_membership_wide %>%
+  rowwise() %>%
+  mutate(
+    intersection = paste(bins_to_use[c_across(all_of(bins_to_use))], collapse = "+")
+  ) %>%
+  ungroup() %>%
+  mutate(intersection = ifelse(intersection == "", "unassigned", intersection)) %>%
+  arrange(intersection, AGI)
+
+# Write one Excel with multiple sheets
+dir.create("tables", showWarnings = FALSE, recursive = TRUE)
+write_xlsx(
+  list(
+    membership_wide = suba_membership_wide,
+    gene_by_bin_long = suba_long_bins,
+    bin_lists = suba_bin_lists,
+    intersections = suba_intersection_label
+  ),
+  path = "tables/SUBA_bins_for_upset.xlsx"
+)
+
+cat("Wrote: tables/SUBA_bins_for_upset.xlsx\n")
