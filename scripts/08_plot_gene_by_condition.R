@@ -501,7 +501,7 @@ plot_gene_by_condition <- function(gene_id,
 ## ----------------------------
 
 if (interactive()) {
-  gene_id   <- "AT5G24470"   # example gene
+  gene_id   <- "AT2G46790"   # example gene
   condition <- "12L12D"      # example condition
   
   # Raw plots (overlay + facets)

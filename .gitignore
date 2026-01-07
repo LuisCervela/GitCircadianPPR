@@ -4,6 +4,7 @@
 .Ruserdata
 .Rproj.user/
 *.Rproj.user
+*.Rproj
 
 # ---- OS junk ----
 .DS_Store
@@ -20,6 +21,10 @@ data_clean/MBQN_*.csv
 data_clean/MBQN_*_expr_only.csv
 data_clean/MBQN_trimmed_selected_GEARS.csv
 data_clean/sample_annotation.csv
+
+# SUBA cleaned derivative (regenerate from raw export)
+data_clean/suba_location_consensus_clean.csv
+data_clean/suba_location_consensus_clean.xlsx
 
 # ---- Intermediate MetaCycle outputs (always ignore) ----
 tables/metacycle_tmp/

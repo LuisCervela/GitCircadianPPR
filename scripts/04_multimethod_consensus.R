@@ -44,7 +44,9 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(rain)
   library(MetaCycle)
-  library(lomb)   # kept for compatibility; not directly used here
+  library(lomb) # kept for compatibility; not directly used here
+  library(tidyr)
+  library(openxlsx)
 })
 
 ## ----------------------------
@@ -768,3 +770,129 @@ final_consensus_table <- consensus_gene_condition %>%
 write.csv(final_consensus_table, file.path(out_tables, "final_consensus_table.csv"), row.names = FALSE)
 
 cat("Done. Final table written to:", file.path(out_tables, "final_consensus_table.csv"), "\n")
+
+## ============================================================
+## 9) Clock gene strength tables as a positive control
+## ============================================================
+
+clean_agi <- function(x) toupper(trimws(sub("\\..*$", "", x)))
+
+# ---- inputs ----
+clock <- readLines("data_clean/clock_only_genelist.txt") |> (\(x) x[nzchar(x)])()
+clock <- clean_agi(clock)
+
+final <- read.csv("tables/final_consensus_table.csv", stringsAsFactors = FALSE)
+sup   <- read.csv("tables/support_by_gene_condition_gear.csv", stringsAsFactors = FALSE)
+meth  <- read.csv("tables/method_results_long.csv", stringsAsFactors = FALSE)
+
+final$AGI <- clean_agi(final$AGI)
+sup$AGI   <- clean_agi(sup$AGI)
+meth$AGI  <- clean_agi(meth$AGI)
+meth$method <- toupper(as.character(meth$method))
+
+vote_methods <- c("RAIN", "JTK", "COSINOR")
+conditions <- c("12L12D", "12L12D_LL", "16L8D", "8L16D")
+
+# ---- alias map (from your table) ----
+alias_map <- tibble::tribble(
+  ~AGI,        ~Alias,
+  "AT5G64170", "LNK1",
+  "AT5G61380", "TOC1",
+  "AT3G46640", "LUX",
+  "AT2G46830", "CCA1",
+  "AT5G02810", "PRR7",
+  "AT5G24470", "PRR5",
+  "AT3G54500", "LNK2",
+  "AT2G46790", "PRR9",
+  "AT3G09600", "RVE8",
+  "AT2G25930", "ELF3",
+  "AT2G40080", "ELF4",
+  "AT1G22770", "GI",
+  "AT1G01060", "LHY"
+) %>% mutate(AGI = clean_agi(AGI))
+
+# ---- summariser (same semantics as Script 08 strength block) ----
+strength_one <- function(gene_id, condition) {
+  cons <- final %>% filter(AGI == gene_id, condition == condition)
+  if (nrow(cons) == 0) return(NULL)
+  cons <- cons[1, ]
+  
+  is_robust <- isTRUE(cons$consensus_rhythmic_phase) || isTRUE(cons$consensus_rhythmic)
+  is_cand   <- isTRUE(cons$consensus_candidate)
+  tier <- if (is_robust) "ROBUST" else if (is_cand) "CANDIDATE" else "NOT_OSCILLATOR"
+  
+  sup_g <- sup %>% filter(AGI == gene_id, condition == condition)
+  
+  gears_keep <- integer(0)
+  if (nrow(sup_g) > 0) {
+    if (tier == "ROBUST") {
+      gears_keep <- unique(sup_g$gear_id[sup_g$support_votes_strict %in% TRUE])
+    } else if (tier == "CANDIDATE") {
+      gears_keep <- unique(sup_g$gear_id[sup_g$support_votes_sugg %in% TRUE])
+    }
+  }
+  
+  meth_g <- meth %>%
+    filter(AGI == gene_id,
+           condition == condition,
+           gear_id %in% gears_keep,
+           method %in% vote_methods,
+           is.finite(padj))
+  
+  out <- lapply(vote_methods, function(mm) {
+    x <- meth_g %>% filter(method == mm)
+    if (nrow(x) == 0) {
+      data.frame(
+        AGI = gene_id, condition = condition, tier = tier,
+        method = mm, n_gears = 0L,
+        min_padj = NA_real_, median_padj = NA_real_,
+        n_strict = 0L, n_suggestive = 0L
+      )
+    } else {
+      data.frame(
+        AGI = gene_id, condition = condition, tier = tier,
+        method = mm,
+        n_gears = n_distinct(x$gear_id),
+        min_padj = min(x$padj, na.rm = TRUE),
+        median_padj = median(x$padj, na.rm = TRUE),
+        n_strict = sum(x$rhythmic_strict %in% TRUE, na.rm = TRUE),
+        n_suggestive = sum(x$rhythmic_suggestive %in% TRUE, na.rm = TRUE)
+      )
+    }
+  }) %>% bind_rows()
+  
+  out$neglog10_median <- suppressWarnings(-log10(out$median_padj))
+  out
+}
+
+# ---- build tables ----
+Clock_strength_long <- bind_rows(lapply(clock, function(g) {
+  bind_rows(lapply(conditions, function(cc) strength_one(g, cc)))
+})) %>%
+  left_join(alias_map, by = "AGI") %>%
+  relocate(Alias, .after = AGI) %>%
+  arrange(condition, Alias, method)
+
+Clock_strength_wide <- Clock_strength_long %>%
+  select(AGI, Alias, condition, tier, method, median_padj) %>%
+  pivot_wider(names_from = method, values_from = median_padj) %>%
+  arrange(condition, Alias)
+
+# ---- add phase estimates ----
+phase_tab <- final %>%
+  select(AGI, condition, phase_est) %>%
+  mutate(phase_est = round(phase_est, 1))
+
+Clock_strength_wide <- Clock_strength_wide %>%
+  left_join(phase_tab, by = c("AGI","condition")) %>%
+  relocate(phase_est, .after = tier)
+
+# ---- export to Excel ----
+wb <- createWorkbook()
+addWorksheet(wb, "Clock13_strength_long")
+addWorksheet(wb, "Clock13_strength_wide")
+
+writeData(wb, "Clock13_strength_long", Clock_strength_long)
+writeData(wb, "Clock13_strength_wide", Clock_strength_wide)
+
+saveWorkbook(wb, "tables/Clock13_rhythmicity_strength.xlsx", overwrite = TRUE)
