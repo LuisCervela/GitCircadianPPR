@@ -19,7 +19,7 @@
 ##
 ## Inputs (from Script 02)
 ##   - data_clean/MBQN_12L12D_PPRclock.csv
-##   - data_clean/MBQN_12L12D_to_LL_PPRclock.csv
+##   - data_clean/MBQN_12L12D_LL_PPRclock.csv
 ##   - data_clean/MBQN_16L8D_PPRclock.csv
 ##   - data_clean/MBQN_8L16D_PPRclock.csv
 ##
@@ -87,7 +87,7 @@ load_condition_PPRclock <- function(path_csv) {
 ## ----------------------------
 paths <- list(
   `12L12D`    = "data_clean/MBQN_12L12D_PPRclock.csv",
-  `12L12D_LL` = "data_clean/MBQN_12L12D_to_LL_PPRclock.csv",
+  `12L12D_LL` = "data_clean/MBQN_12L12D_LL_PPRclock.csv",
   `16L8D`     = "data_clean/MBQN_16L8D_PPRclock.csv",
   `8L16D`     = "data_clean/MBQN_8L16D_PPRclock.csv"
 )
