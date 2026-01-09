@@ -13,7 +13,7 @@
 ##
 ## Inputs (from Script 01)
 ##   - data_clean/MBQN_12L12D.csv
-##   - data_clean/MBQN_12L12D_to_LL.csv
+##   - data_clean/MBQN_12L12D_LL.csv
 ##   - data_clean/MBQN_16L8D.csv
 ##   - data_clean/MBQN_8L16D.csv
 ##
@@ -166,7 +166,7 @@ make_expr_only <- function(infile, outfile) {
 ## ----------------------------
 condition_map <- list(
   `12L12D`    = file.path(indir, "MBQN_12L12D.csv"),
-  `12L12D_LL` = file.path(indir, "MBQN_12L12D_to_LL.csv"),
+  `12L12D_LL` = file.path(indir, "MBQN_12L12D_LL.csv"),
   `16L8D`     = file.path(indir, "MBQN_16L8D.csv"),
   `8L16D`     = file.path(indir, "MBQN_8L16D.csv")
 )
