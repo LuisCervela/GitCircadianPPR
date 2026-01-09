@@ -12,15 +12,11 @@ Pipeline to identify rhythmic PPR genes (and core clock controls) across multipl
 
 ## Installation (R packages)
 
-This pipeline requires CRAN + Bioconductor packages.
+install.packages(c("data.table","dplyr","ggplot2","stringr","readxl","MetaCycle","lomb"))
 
-install.packages(c("data.table","dplyr","ggplot2","stringr","readxl"))
-if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager")
-BiocManager::install(c("Biostrings"))
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 
-install.packages("rain")
-install.packages("MetaCycle")  # if not available, see MetaCycle docs
-install.packages("lomb")
+BiocManager::install(c("Biostrings","rain"))
 
 ## Input data (not included in repo)
 
