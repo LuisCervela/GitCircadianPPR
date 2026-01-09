@@ -93,6 +93,6 @@ mbqn_16L8D     <- mbqn_trimmed[, cols_16L8D]
 mbqn_8L16D     <- mbqn_trimmed[, cols_8L16D]
 
 fwrite(mbqn_12L12D,    "data_clean/MBQN_12L12D.csv")
-fwrite(mbqn_12L12D_LL, "data_clean/MBQN_12L12D_to_LL.csv")
+fwrite(mbqn_12L12D_LL, "data_clean/MBQN_12L12D_LL.csv")
 fwrite(mbqn_16L8D,     "data_clean/MBQN_16L8D.csv")
 fwrite(mbqn_8L16D,     "data_clean/MBQN_8L16D.csv")
